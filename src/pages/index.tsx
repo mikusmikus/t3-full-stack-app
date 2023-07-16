@@ -3,7 +3,8 @@ import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { api } from "~/utils/api";
 
 export default function Home() {
-  // const hello = api.example.hello.useQuery({ text: "from tRPC" });
+  const { data } = api.posts.getAll.useQuery();
+  console.log("data", data);
 
   const { user } = useUser();
 
@@ -23,6 +24,12 @@ export default function Home() {
         ) : (
           <SignInButton />
         )}
+
+        <div>{JSON.stringify(data)}</div>
+        <div>
+          {!!data?.length &&
+            data.map((post) => <div key={post.id}>{post.content}</div>)}
+        </div>
       </main>
     </>
   );
