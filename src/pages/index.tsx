@@ -5,6 +5,8 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useState } from "react";
+import { TRPCError } from "@trpc/server";
+import { TRPCClientError } from "@trpc/client";
 
 dayjs.extend(relativeTime);
 
@@ -12,8 +14,6 @@ export default function Home() {
   const { data: posts } = api.posts.getAll.useQuery();
 
   const { user } = useUser();
-
-  console.log("posts", posts);
 
   return (
     <>
@@ -71,11 +71,38 @@ const PostView = ({ post, author }: PostWithAuthor) => {
   );
 };
 
+interface UseCreatePostOptions {
+  onSuccess?: () => void;
+  onError?: () => void;
+}
+
+const useCreatePost = (options: UseCreatePostOptions) => {
+  const { onSuccess, onError } = options;
+  const ctx = api.useContext();
+  const mutation = api.posts.create.useMutation({
+    onSuccess: async () => {
+      await ctx.posts.getAll.invalidate();
+      onSuccess?.();
+    },
+    onError: (error) => {
+      console.log("error", error);
+      onError?.();
+    },
+  });
+
+  return mutation;
+};
+
 const PostWizard = () => {
   const { user } = useUser();
   console.log("user", user);
 
-  const { mutate, isLoading: isPosting } = api.posts.create.useMutation();
+  const { mutate, isLoading: isPosting } = useCreatePost({
+    onSuccess: () => {
+      setInputField("");
+    },
+  });
+
   const [inputField, setInputField] = useState("");
 
   if (!user) {
@@ -101,8 +128,6 @@ const PostWizard = () => {
               mutate({ content: inputField });
             } catch (error) {
               console.log("error", error);
-            } finally {
-              setInputField("");
             }
           }}
         >
