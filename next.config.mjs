@@ -19,8 +19,18 @@ const config = {
     defaultLocale: "en",
   },
   // config image
+
   images: {
-    domains: ["images.clerk.dev"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.gravatar.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.clerk.dev",
+      },
+    ],
   },
 };
 

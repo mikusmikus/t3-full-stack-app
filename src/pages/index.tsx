@@ -4,13 +4,16 @@ import { type RouterOutputs, api } from "~/utils/api";
 import Image from "next/image";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useState } from "react";
 
 dayjs.extend(relativeTime);
 
 export default function Home() {
-  const { data } = api.posts.getAll.useQuery();
+  const { data: posts } = api.posts.getAll.useQuery();
 
   const { user } = useUser();
+
+  console.log("posts", posts);
 
   return (
     <>
@@ -22,8 +25,8 @@ export default function Home() {
       <main className="min-h-screen bg-slate-200 p-4 text-black">
         {user ? (
           <div className="flex items-center justify-end gap-x-6 ">
-            <div>Hello, {user.firstName}</div>
-            <UserButton />
+            <div>Hello, {user.firstName || "User"}</div>
+            <UserButton afterSignOutUrl="/" />
           </div>
         ) : (
           <SignInButton />
@@ -31,9 +34,9 @@ export default function Home() {
 
         <div className="mx-auto max-w-5xl px-10">
           <PostWizard />
-          <ul className="my-10 grid md:grid-cols-2 lg:grid-cols-3">
-            {!!data?.length &&
-              data.map(({ post, author }) => (
+          <ul className="my-10 grid gap-6 md:grid-cols-2">
+            {!!posts?.length &&
+              posts.map(({ post, author }) => (
                 <PostView key={post.id} post={post} author={author} />
               ))}
           </ul>
@@ -59,7 +62,8 @@ const PostView = ({ post, author }: PostWithAuthor) => {
       />
       <div className="flex flex-col gap-2">
         <h3 className="text-xs">
-          @{author.username} | {dayjs(post.createdAt).fromNow()}
+          @{author.username || author.firstName} |{" "}
+          {dayjs(post.createdAt).fromNow()}
         </h3>
         {post.content}
       </div>
@@ -70,6 +74,9 @@ const PostView = ({ post, author }: PostWithAuthor) => {
 const PostWizard = () => {
   const { user } = useUser();
   console.log("user", user);
+
+  const { mutate, isLoading: isPosting } = api.posts.create.useMutation();
+  const [inputField, setInputField] = useState("");
 
   if (!user) {
     return <div>Sign in to create a post</div>;
@@ -86,10 +93,32 @@ const PostWizard = () => {
           width={80}
           height={80}
         />
-        <textarea
-          placeholder="What's on your mind?"
-          className="w-full p-2 "
-        ></textarea>
+        <form
+          className="flex h-20  w-full"
+          onSubmit={(e) => {
+            e.preventDefault();
+            try {
+              mutate({ content: inputField });
+            } catch (error) {
+              console.log("error", error);
+            } finally {
+              setInputField("");
+            }
+          }}
+        >
+          <textarea
+            value={inputField}
+            onChange={(e) => setInputField(e.target.value)}
+            placeholder="What's on your mind?"
+            className="w-full p-2 "
+          ></textarea>
+          <button
+            disabled={isPosting}
+            className="rounded-md bg-blue-500 p-2 text-white"
+          >
+            Post
+          </button>
+        </form>
       </div>
     </div>
   );
