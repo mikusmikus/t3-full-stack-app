@@ -52,7 +52,7 @@ export const postsRouter = createTRPCRouter({
 
   create: privateProcedure.input(
     z.object({
-      content: z.string().min(1).max(280),
+      content: z.string().min(10, "Need to be atleast 10 characters").max(280),
     }),
   ).mutation(async( {ctx, input}) => {
     const authorId = ctx.currentUserId;

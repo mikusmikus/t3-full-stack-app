@@ -7,6 +7,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { useState } from "react";
 import { TRPCError } from "@trpc/server";
 import { TRPCClientError } from "@trpc/client";
+import { toast } from "react-hot-toast";
 
 dayjs.extend(relativeTime);
 
@@ -73,7 +74,7 @@ const PostView = ({ post, author }: PostWithAuthor) => {
 
 interface UseCreatePostOptions {
   onSuccess?: () => void;
-  onError?: () => void;
+  onError?: (message: string) => void;
 }
 
 const useCreatePost = (options: UseCreatePostOptions) => {
@@ -85,8 +86,9 @@ const useCreatePost = (options: UseCreatePostOptions) => {
       onSuccess?.();
     },
     onError: (error) => {
-      console.log("error", error);
-      onError?.();
+      // get error message
+      const message = error?.data?.zodError?.fieldErrors?.content;
+      onError?.(message && message[0] ? message[0] : "Something went wrong");
     },
   });
 
@@ -100,6 +102,9 @@ const PostWizard = () => {
   const { mutate, isLoading: isPosting } = useCreatePost({
     onSuccess: () => {
       setInputField("");
+    },
+    onError: (message) => {
+      toast.error(message);
     },
   });
 
