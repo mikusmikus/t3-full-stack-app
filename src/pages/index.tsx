@@ -5,9 +5,8 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useState } from "react";
-import { TRPCError } from "@trpc/server";
-import { TRPCClientError } from "@trpc/client";
 import { toast } from "react-hot-toast";
+import Link from "next/link";
 
 dayjs.extend(relativeTime);
 
@@ -52,21 +51,25 @@ type PostWithAuthor = RouterOutputs["posts"]["getAll"][number];
 const PostView = ({ post, author }: PostWithAuthor) => {
   return (
     <li className="flex items-start gap-x-4">
-      <Image
-        placeholder="blur"
-        blurDataURL={author?.profilePicture || ""}
-        src={author?.profilePicture || ""}
-        className="h-10 w-10"
-        alt="Profile image"
-        width={40}
-        height={40}
-      />
+      <Link href={`/${author.id}`}>
+        <Image
+          placeholder="blur"
+          blurDataURL={author?.profilePicture || ""}
+          src={author?.profilePicture || ""}
+          className="h-10 w-10"
+          alt="Profile image"
+          width={40}
+          height={40}
+        />
+      </Link>
       <div className="flex flex-col gap-2">
         <h3 className="text-xs">
-          @{author.username || author.firstName} |{" "}
-          {dayjs(post.createdAt).fromNow()}
+          @
+          {author.username ||
+            `${author.firstName || ""}  ${author.lastName || ""}`}
+          {` `}| {dayjs(post.createdAt).fromNow()}
         </h3>
-        {post.content}
+        <Link href={`/post/${post.id}`}>{post.content}</Link>
       </div>
     </li>
   );

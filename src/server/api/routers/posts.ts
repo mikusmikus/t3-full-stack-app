@@ -1,19 +1,10 @@
 import { clerkClient } from '@clerk/nextjs';
-import { type User } from '@clerk/nextjs/dist/types/server';
 import { TRPCError } from '@trpc/server';
 import { z } from "zod";
 import { createTRPCRouter, privateProcedure, publicProcedure } from "~/server/api/trpc";
+import { mapUserForClient } from '~/server/helpers/map-user-for-client';
 
-const mapUserForClient = (user: User) => {
-   return {
-    id: user.id,
-    username: user.username,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    profilePicture: user.profileImageUrl, 
-   }
 
-}
 
 export const postsRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
